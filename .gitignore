@@ -1,0 +1,10 @@
+node_modules/
+src-old/
+test-nodes/minimal/nr-data/
+client/stats/
+resources/client/
+resources/index.html
+resources/manifest.json
+
+client/src/edit-panels/
+node-red-vue.html

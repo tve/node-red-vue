@@ -1,0 +1,15 @@
+{
+  "name": "minimal",
+  "version": "0.4.5",
+  "node-red": {
+    "version": "^3.0.0",
+    "nodes": {
+      "minimal": "minimal.js",
+      "has config": "hasconfig.js",
+      "minivue": "minivue.js"
+    }
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

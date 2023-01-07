@@ -1,0 +1,14 @@
+<script type="module" crossorigin src="http://core2.voneicken.com:5173/@vite/client"></script>
+<script
+  type="module"
+  crossorigin
+  src="http://core2.voneicken.com:5173/src/node-red-vue.ts"></script>
+<script src="/resources/node-red-vue/tailwindcss-cdn-3.2.4.js"></script>
+<script>
+  tailwind.config = {
+    important: ".tw-root.tw-root", // scope to those elements, doubled to match base.css nesting
+    corePlugins: { preflight: false }, // protect Node-RED...
+  }
+  console.log("tailwind.config", JSON.stringify(tailwind.config))
+  console.log("Ignore the above warnings from tailwindcss... 🙄")
+</script>
