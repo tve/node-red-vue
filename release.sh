@@ -32,7 +32,7 @@ fi
 
 echo "Patching up entry point"
 rm -f node-red-vue.html
-sed -e 's;"/client;"/resources/node-red-vue/client;' \
+sed -e 's;"/client;"resources/node-red-vue/client;' \
     resources/index.html >node-red-vue.html
 
 echo "Releasing Node-RED-Vue"

@@ -75,7 +75,7 @@ module.exports = function (RED) {
 
       let ix = templates.findIndex(t => t.nodeType === nodeType)
       if (ix < 0) ix = templates.length
-      const url = `/_vue/component/${nodeType}`
+      const url = `_vue/component/${nodeType}`
       templates[ix] = { ix, name: nodeType, url, styles, hash }
       components[nodeType] = script
       RED.comms.publish("vue-add-type", ix)
@@ -88,7 +88,7 @@ module.exports = function (RED) {
         RED.log.error(`Vue template ${vueFile} not found`)
         return
       }
-      RED.log.info("Creating Vue template for " + nodeType + " from " + vueFile)
+      RED.log.info("Creating Vue template for '" + nodeType + "' from " + vueFile)
       fsp
         .readFile(vueFile, "utf8")
         .then(data => _createVueTemplate(nodeType, vueFile, data))

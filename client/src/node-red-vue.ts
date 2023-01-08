@@ -161,7 +161,10 @@ async function processTemplate(ix: number, data: Record<string, any>) {
     // async import of component module and sanity checks
     await importShimReady
     //const mod = await dynImport(document.location.origin + data.url) // import(/*@vite-ignore*/ data.url)
-    const mod = await global.importShim(document.location.origin + data.url)
+    const loc = document.location
+    const modUrl = loc.origin + loc.pathname + data.url
+    console.log("Importing", modUrl)
+    const mod = await global.importShim(modUrl)
     const component = mod.default // Vue SFCs are expected to export default
     if (!component || typeof component != "object") throw new Error("invalid component")
     if (!["props", "node_red"].every(f => f in component))
