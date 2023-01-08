@@ -28,7 +28,7 @@
     "mitt": "^3.0.0"
   },
   "node-red": {
-    "version": ">=3.0.2",
+    "version": ">=3.0.0",
     "plugins": {
       "node-red-vue": "node-red-vue.js"
     }
