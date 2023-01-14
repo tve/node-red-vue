@@ -3,25 +3,25 @@
 -->
 
 <template>
-  <div class="mt-3 flex w-full min-w-0 flex-col">
+  <div class="mt:1ex flex flex:col w:full min-w:0">
     <nr-fmt-tip :tip="tip" />
-    <div v-for="(r, ix) in rows" :key="r[0]" class="my-2 mt-2 flex justify-between">
+    <div v-for="(r, ix) in rows" :key="r[0]" class="my:1ex mt:1ex flex jc:space-between">
       <input
         type="text"
         :value="r[0]"
         @change="onUpdateKey(ix, $event)"
-        class="mr-2 min-w-[6em] shrink grow basis-16 px-2" />
-      <i class="fa fa-long-arrow-right mt-2 mr-2 grow-0" />
+        class="mr:1ex min-w:10ex flex-shrink:1 flex-grow:1 flex-basis:16 px:1ex" />
+      <i class="fa fa-long-arrow-right mt:1ex mr:1ex flex-grow:0" />
       <input
         type="text"
         :value="r[1]"
         @change="onUpdateValue(ix, $event)"
-        class="mr-2 min-w-[12em] shrink grow-[3] basis-32 px-2" />
-      <button class="w-8 grow-0 rounded border border-neutral-300" @click="onDeleteRow(ix)">
+        class="mr:1ex min-w:20ex flex-shrink:1 flex-grow:3 flex-basis:32 px:1ex" />
+      <button class="w:5ex flex-grow:0 r:4 b:solid|1|gray-78" @click="onDeleteRow(ix)">
         <i class="fa fa-minus" />
       </button>
     </div>
-    <button class="my-2 h-[34px] w-10 rounded border border-neutral-300" @click="onAddRow()">
+    <button class="my:1ex h:34px w:5ex r:4 b:solid|1|gray-78" @click="onAddRow()">
       <i class="fa fa-plus" />
     </button>
   </div>

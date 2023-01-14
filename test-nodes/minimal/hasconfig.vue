@@ -5,12 +5,13 @@
       :modelValue="name"
       @update:modelValue="$emit('update:prop', 'name', $event)"
       tip="Name of node in Node-RED, not shown in dashboard." />
-    <div class="mt-2">MQTT broker</div>
+
+    <div class="mt-2">MY config</div>
     <nr-config-input
-      :modelValue="broker"
-      @update:modelValue="$emit('update:prop', 'broker', $event)"
-      prop-name="broker"
-      :configTypes="['mqtt-broker']"
+      :modelValue="myconfig"
+      @update:modelValue="$emit('update:prop', 'myconfig', $event)"
+      prop-name="myconfig"
+      :configTypes="['myconfig']"
       v-slot="slotProps">
       {{ format_config_node(slotProps.node) }}
     </nr-config-input>
@@ -21,7 +22,7 @@
 export default {
   props: {
     name: { default: "my config" },
-    broker: { default: "", config_type: "mqtt-broker" },
+    myconfig: { default: "", config_type: "myconfig" },
   },
   node_red: {
     category: "common",

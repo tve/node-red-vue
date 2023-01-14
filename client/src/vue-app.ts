@@ -82,8 +82,8 @@ export function mountEditApp(nr_obj: NrNodeRaw, el: HTMLElement) {
     node: asNrNode(nr_obj),
     type: nr_obj._def.type,
     component,
+    propDefs: (components[component] as Record<string, any>)?.props,
   }
-  console.log("Properties:", rootProps.node.getPropNames().join(", "))
 
   // create and mount the Vue app
   const { app, $bus } = createVueApp(EditPanel, rootProps)

@@ -33,6 +33,7 @@ module.exports = function (sfc_source, filename) {
 
   // compile the script part into plain javascript
   let script = ""
+  let scriptAst, scriptRaw
   if (descriptor.script) {
     const scriptDescr = compileScript(descriptor, {
       id: scopeId,
@@ -43,6 +44,8 @@ module.exports = function (sfc_source, filename) {
     templateOptions.compilerOptions.bindingMetadata = scriptDescr.bindings
     //console.log('===== script:\n', scriptDescr)
     script += scriptDescr.content.replace(/export\s*default/, "const component =")
+    scriptAst = scriptDescr.scriptAst
+    scriptRaw = scriptDescr.content // what compileScript returned before we mangled it
   } else {
     script += "const component = {}"
   }
@@ -80,5 +83,5 @@ module.exports = function (sfc_source, filename) {
   script += "\nexport default component"
 
   // return concat of render function and script&style
-  return { script, styles, hash: scope, errors: null }
+  return { script, scriptAst, scriptRaw, styles, hash: scope, errors: null }
 }

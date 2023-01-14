@@ -2,8 +2,8 @@
 -->
 
 <template>
-  <div class="flex w-full">
-    <select class="grow border border-neutral-300 px-2" @input.prevent="onInput">
+  <div class="flex w:full">
+    <select class="flex:1 border:1|solid|gray-78 px:1ex w:0 flex:1" @input.prevent="onInput">
       <option value="">--</option>
       <option
         v-for="config in configNodes"
@@ -14,12 +14,12 @@
       </option>
     </select>
     <button
-      class="ml-6 mr-3 w-10 rounded border border-neutral-300"
+      class="ml:2ex mr:1ex w:5ex r:4 border:1|solid|gray-78"
       :disabled="!configSelected"
       @click="onEdit">
       <i class="fa fa-pencil" />
     </button>
-    <button class="w-10 rounded border border-neutral-300" @click="onAdd">
+    <button class="w:5ex r:4 border:1|solid|gray-78" @click="onAdd">
       <i class="fa fa-plus" />
     </button>
   </div>

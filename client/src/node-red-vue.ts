@@ -1,31 +1,23 @@
 // Vue plugin for Node-RED - implement Node-RED flow-editor node templates using Vue & TailwindCSS
 // Copyright ©2022-2023 by Thorsten von Eicken, see LICENSE
 
-import { RED, NrNodeRaw, asNrNode, NrNodeDef, cleanNrNode } from "/src/node-red"
+import { RED, NrNodeRaw, asNrNode, cleanNrNode } from "/src/node-red"
 import { addComponent, mountEditApp, makeComponentName } from "./vue-app"
-import "./index.css"
-//import dynImport from "./dynimport"
+import "./base.css"
+import mapImport from "./map-import"
+
+// Master.css config
+import config from "./master.css"
+import MasterCSS from "@master/css"
+export const css = new MasterCSS({ config })
 
 // ====== Import shims
 
 const global = globalThis as any
 
-// Initialize es-module-shims, used when importing Vue components to point to Vue.
-// It may be overkill, but enables importing additional packages in the future.
-global.esmsInitOptions = {
-  shimMode: true, // shimMode requird to support multiple dynamic import maps
-  // Skip source analysis of certain URLs for full native passthrough
-  skip: "^https?:.*/assets/index.[a-z0-9]{8}.js$", // bundled Node-RED-Vue assets
-  mapOverrides: true, // Permit overrides to import maps (used by custom widget HMR)
-}
 import * as vue_all from "vue"
 global.Vue = vue_all
-const importShimReady = import("./map-import").then(mapImport => {
-  mapImport.default({
-    vue: "Vue",
-  })
-  console.log("Import map defined")
-})
+mapImport({ vue: "Vue" })
 
 // ====== Plugin data structures
 
@@ -52,39 +44,39 @@ const templates: {
 
 // ====== Plugin registration with Node-RED
 
-RED.plugins.registerPlugin("node-red-vue", {
-  type: "node-red-vue",
-  onadd: function () {
-    console.log("Adding Node-RED Vue plugin")
+RED.plugins.registerPlugin("node-red-vue", { type: "node-red-vue" })
 
-    // Subscribe to notifications from the runtime that a new node type has been registered.
-    RED.comms.subscribe("vue-add-type", (topic, object) => {
-      // topic == 'vue-add-type'
-      if (object && typeof object == "object") {
-        const { ix, name } = object
-        if (name && typeof name == "string" && Number.isFinite(ix) && ix >= 0) {
-          // check whether it's OK to fetch this template
-          const err = checkTemplate(ix, name)
-          if (err) {
-            console.log(err)
-            return
-          }
-          // fetch the template and any we may have missed
-          let start = ix
-          while (start > 0 && checkTemplate(start - 1, null) == null) start--
-          fetchTemplates(start, ix).then(() => {}) // launch async
-          return
-        }
+// Subscribe to notifications from the runtime that a new node type has been registered.
+RED.comms.subscribe("vue-add-type", (topic, object) => {
+  // topic == 'vue-add-type'
+  if (object && typeof object == "object") {
+    const { ix, name } = object
+    if (name && typeof name == "string" && Number.isFinite(ix) && ix >= 0) {
+      // check whether it's OK to fetch this template
+      const err = checkTemplate(ix, name)
+      if (err) {
+        console.log(err)
+        return
       }
-      console.log("node-red-vue: invalid vue-add-type message:", object)
-    })
-
-    // Fetch the already-registered templates from the server
-    fetchTemplates(0, -1).then(() => {}) // launch async
-
-    console.log("Node-RED Vue plugin added")
-  },
+      // fetch the template and any we may have missed
+      let start = ix
+      while (start > 0 && checkTemplate(start - 1, null) == null) start--
+      fetchTemplates(start, ix).then(() => {}) // launch async
+      return
+    }
+  }
+  console.log("node-red-vue: invalid vue-add-type message:", object)
 })
+
+// RED.events.on("nodes:add", (node: NrNodeRaw) => {
+//   if ("vue_props" in node._def) {
+//     console.log(`ADD ${node.type} (${node.id}) ${node.fd_container}`, node)
+//   }
+// })
+
+// Fetch and process initial Vue templates
+fetchTemplates(0, -1).then(() => {}) // launch async
+console.log("Node-RED Vue plugin registered, events subscribed, fetching templates.")
 
 // ====== Fetching and processing of Vue templates
 
@@ -96,8 +88,7 @@ async function fetchTemplates(start_ix: number, end_ix: number): Promise<void> {
   // perform fetch
   try {
     const url =
-      "_vue/templates?" +
-      new URLSearchParams({ start: start_ix.toString(), end: end_ix.toString() })
+      "_vue/registry?" + new URLSearchParams({ start: start_ix.toString(), end: end_ix.toString() })
     const res = await fetch(url)
     if (!res.ok) throw new Error(`HTTP status ${res.status}: ${res.statusText}`)
     var data = (await res.json()) as ({ name: string; component: Component } | null)[]
@@ -122,6 +113,7 @@ async function fetchTemplates(start_ix: number, end_ix: number): Promise<void> {
   }
 
   // process what we got
+  //console.log(`Fetch(${start_ix}, ${end_ix}) returned ${data.length} components`)
   data.forEach((d, ix) => {
     if (d) processTemplate(ix + start_ix, d).then(() => {}) // launch async
   })
@@ -151,7 +143,7 @@ function checkTemplate(ix: number, name: string | null) {
   }
 }
 
-async function processTemplate(ix: number, data: Record<string, any>) {
+export async function processTemplate(ix: number, data: Record<string, any>) {
   var name = "unknown"
   try {
     // sanity checks
@@ -159,84 +151,27 @@ async function processTemplate(ix: number, data: Record<string, any>) {
       throw new Error(`invalid data: ${JSON.stringify(data)}`)
     name = data.name
     // async import of component module and sanity checks
-    await importShimReady
-    //const mod = await dynImport(document.location.origin + data.url) // import(/*@vite-ignore*/ data.url)
     const loc = document.location
     const modUrl = loc.origin + loc.pathname + data.url
-    console.log("Importing", modUrl)
     const mod = await global.importShim(modUrl)
     const component = mod.default // Vue SFCs are expected to export default
     if (!component || typeof component != "object") throw new Error("invalid component")
-    if (!["props", "node_red"].every(f => f in component))
-      throw new Error("missing props and/or node_red field in component")
-    // generate stuff for flow
-    const cn = makeComponentName(name)
-    addComponent("edit-" + cn, component)
-    if ("help" in component) generateHelp(name, component.help)
-    const isConfig = component.node_red.category == "config"
-    generateTemplate(name, component.props, isConfig)
-    registerType(name, component.props, component.node_red)
+    // process template components slightly differently from plain components
+    if ("node_red" in component) {
+      // template component need a name tweak
+      const cn = makeComponentName(name)
+      addComponent("edit-" + cn, component)
+      console.log(`Added Vue template component edit-${cn} from ${modUrl}`)
+    } else {
+      addComponent(name, component)
+      console.log(`Added Vue component ${name} from ${modUrl}`)
+    }
   } catch (err) {
     console.error(`node-red-vue: failed to load vue template for ${name}:`, err)
     templates[ix].state = TemplateState.dead
   }
 }
-
-// generate a help template for the flow editor with the help text
-function generateHelp(name: string, help: string) {
-  // remove any existing script element for this type
-  const oldEl = document.querySelector(`script[data-template-name="${name}"]`)
-  if (oldEl) oldEl.remove()
-  // create the script element for Node-RED
-  const helpEl = document.createElement("script")
-  helpEl.type = "text/markdown"
-  helpEl.setAttribute("data-help-name", name)
-  helpEl.textContent = help
-  document.body.appendChild(helpEl)
-}
-
-// generate a data template for the flow editor consistsing of a hidden string input for
-// every prop in the component
-function generateTemplate(name: string, props: Record<string, any>, isConfig: boolean) {
-  // remove any existing script element for this type
-  const oldEl = document.querySelector(`script[data-template-name="${name}"]`)
-  if (oldEl) oldEl.remove()
-  // create the edit script tag for Node-RED to populate with values
-  const scriptEl = document.createElement("script")
-  scriptEl.type = "text/html"
-  scriptEl.setAttribute("data-template-name", name)
-  const html = `<div id="${name}-edit-root" style="width:100%;height:100%" class="tw-root tw-root"></div>`
-  const prefix = isConfig ? "node-config-input-" : "node-input-"
-  const inputs = Object.keys(props).map(prop => `<input type="hidden" id="${prefix + prop}">`)
-  scriptEl.innerText = html + '<div style="display:none">' + inputs.join("") + "</div>"
-  document.body.appendChild(scriptEl)
-  //console.log("Created edit script element:", scriptEl)
-}
-
-// register the node template type with Node-RED, which makes it show up in the palette and
-// allows the flow editor to create instances of it.
-function registerType(name: string, props: Record<string, any>, node_red: Record<string, any>) {
-  const typedef = Object.assign({}, node_red) as Record<string, any>
-  // FIXME: need general conversion
-  if (!("defaults" in typedef)) {
-    typedef.defaults = {}
-    for (const p in props) {
-      const v = props[p]
-      if (typeof v == "object") {
-        typedef.defaults[p] = { value: v.default }
-        if ("config_type" in v) typedef.defaults[p].type = v.config_type
-      } else {
-        typedef.defaults[p] = { value: v }
-      }
-    }
-  }
-  typedef.oneditprepare = oneditprepare
-  console.log(`Registering Vue-based type ${name}:`, typedef)
-  RED.nodes.registerType(name, typedef as NrNodeDef)
-
-  // console.log(`${name}: ${JSON.stringify(RED.nodes.getType(name))})}`)
-  // console.log(`minimal: ${JSON.stringify(RED.nodes.getType("minimal"))})}`)
-}
+global.vueProcessTemplate = processTemplate
 
 function oneditprepare(this: NrNodeRaw) {
   // Mount the Vue app on the root element of the edit form
@@ -247,6 +182,7 @@ function oneditprepare(this: NrNodeRaw) {
     console.error(`Could not find element #${nodeType}-edit-root`)
     return
   }
+  attach.style.width = "500px" // initial and minimum width, see oneditresize below
   const { $bus, unmount } = mountEditApp(node, attach)
 
   // oneditsave needs to save the edited
@@ -267,4 +203,9 @@ function oneditprepare(this: NrNodeRaw) {
     unmount()
     cleanNrNode(node)
   }
+
+  nodeDef.oneditresize = function (this: NrNodeRaw, size: { width: number; height: number }) {
+    attach.style.width = size.width + "px"
+  }
 }
+global.vueOnEditPrepare = oneditprepare

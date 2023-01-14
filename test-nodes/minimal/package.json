@@ -6,6 +6,8 @@
     "nodes": {
       "minimal": "minimal.js",
       "has config": "hasconfig.js",
+      "myconfig": "myconfig.js",
+      "tabbed": "tabbed.js",
       "minivue": "minivue.js"
     }
   },

@@ -1,11 +1,11 @@
 <template>
-  <div class="mt-4 grid grid-cols-[100px,1fr] content-center gap-x-3 gap-y-3">
-    <div class="mt-2"><i class="fa fa-tag mr-1" /> Name</div>
+  <nr-props-grid>
+    <nr-label icon="fa fa-tag mr-1"> Name</nr-label>>
     <nr-string-input
       :node="node"
       prop-name="name"
-      tip="Name of node in Node-RED, not shown in dashboard." />
-  </div>
+      tip="Name of node in Node-RED, not shown in dashboard." /> </nr-props-grid
+  >>
 </template>
 
 <script>

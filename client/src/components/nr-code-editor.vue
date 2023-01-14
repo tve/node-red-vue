@@ -1,5 +1,10 @@
 <template>
-  <div class="h-full w-full" :id="editorId"></div>
+  <div
+    :class="[
+      'flex-grow:1 flex-shrink:1 w:full',
+      '{border:1|solid|gray-70}_.red-ui-editor-text-container',
+    ]"
+    :id="editorId"></div>
 </template>
 
 <script lang="ts">
@@ -30,6 +35,9 @@ export default defineComponent({
       value: this.modelValue || "",
       minimap: { enabled: false },
     })
+  },
+  unmounted() {
+    // clean-up source code editor
   },
 })
 </script>

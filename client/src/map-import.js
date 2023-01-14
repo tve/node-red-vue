@@ -3,18 +3,20 @@
 
 import "es-module-shims"
 
-// This module deals with dynamically loaded widgets, specifically, their imports
-// the old method was to define some globals that custom widgets could use, but the new
-// way is to use import maps courtesy of es-module-shims.
-// The globals should be removed at some point, although we still need to make sure all
-// of Vue and Vuetify is pulled in (no treeshaking optimization for those).
+// This module deals with dynamically loaded components, specifically, their imports
+// using import maps courtesy of es-module-shims.
 
 const createBlob = (source, type = "text/javascript") =>
   URL.createObjectURL(new Blob([source], { type }))
 
-// convert the global var names in the import_map values to a URL from a blob
-// that re-exports the global var as a module
-export default function (import_map) {
+// ImportMap accepts a map of import specifiers (what importers specify in the "from" clause
+// of an import statement) to global variables (type constructed using "import * from").
+// It uses es-module-shims to construct a blob URL that re-exports the global variable as
+// a module with the desired name, and adds that to the browser's import map.
+// The intended use is for the caller to import the foreign module from whatever URL (possibly
+// using a dynamic import) and then call ImportMap to make the module available to the rest
+// of the app using some canonical name.
+export default function (/*ImportMap*/ import_map) {
   const imap = { imports: {} }
   for (const key in import_map) {
     const global_var = import_map[key]
@@ -33,5 +35,5 @@ export default function (import_map) {
     imap.imports[key] = blobUrl
   }
   importShim.addImportMap(imap)
-  console.log("Import map: ", JSON.stringify(importShim.getImportMap()))
+  console.log("Import map: ", JSON.stringify(importShim.getImportMap()?.imports))
 }

@@ -10,6 +10,31 @@ a Vue component that implements the editing pane.
 
 **WARNING**: this is a construction zone, contact the author on the Node-RED forum for info.
 
+## How-to
+
+In order to write a Node-RED node using Vue:
+
+- Do not write a `node.html` file, instead write a `node.vue` file. The `.vue` file must be in
+  the same directory hand have the same base-name as the `.js` file (i.e. the same requirements
+  as the former `.html` file).
+- In the `node.js` file, register the `node.vue` file by placing
+  after the usual call to `RED.nodes.registerType("my-node-name", ...)` the following:
+  `RED.plugins.get('node-red-vue').createVueTemplate("my-node-name", __filename)`
+- In the `.vue` file write a Vue component to display the node configuration interface using the
+  Vue Options API, not the Vue Composition API (sorry).
+- Define the configuration variables, i.e., what normall goes into the `defaults` object in the
+  standard `node.html` file, as `props` in the Vue component.
+  - Use the Vue types so the values are not strings where desired, e.g. Number, Array, Object, String, ...
+  - Use the Vue `default` property instead of the conventional `value` property.
+  - Use the Vue `required` property the same way as the conventional `required` property.
+  - For variables that are references to config nodes, use a type of String and set a
+    `configType` property to the type of the config node (e.g. 'mqtt-broker', 'flexdash container', ...).
+  - Validations and filters are not yet supported.
+- Place all other standard node type properties into a `node_red` field in the Vue options object,
+  e.g., `category`, `color`, `inputs`, `outputs`, `icon`, `label`, `labelStyle`, `paletteLabel`, etc.
+- Place help text for the help panel in the flow editor side-panel into a `help` field in the Vue
+  options object and write the help using markdown syntax.
+
 ## Benefits
 
 - Clean abstraction of pieces using components instead of doing JQuery DOM manipulation

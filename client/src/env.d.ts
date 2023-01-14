@@ -7,6 +7,7 @@
 //   export default component
 // }
 
+// Declare the types of events we broadcast using mitt
 import { Emitter } from "mitt"
 type BusEvents = {
   onSave: void

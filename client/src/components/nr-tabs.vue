@@ -1,27 +1,22 @@
 <template>
-  <nav class="flex flex-row border-b border-solid border-neutral-300 pr-2">
+  <nav class="flex flex:row bb:solid|1|gray-60 pr:2ex mb:1ex">
     <a
       v-for="(tab, ix) in tabs"
       key="tab"
       @click.prevent="$emit('update:modelValue', ix)"
       href="#"
-      :class="classes[ix]">
+      :selected="selected[ix]"
+      :class="[
+        'inline-block flex:1 mx:1ex px:2ex py:6 rt:0.5ex',
+        'border:0.5|solid|gray-78 bb:0 bg:gray-95',
+        '{bg:white;mb:-1px}.selected',
+        { selected: selected[ix] },
+      ]"
+      xclass="{relative;bg:white;bottom:-1px}.active">
       {{ tab }}
     </a>
   </nav>
 </template>
-
-<style scoped lang="postcss">
-.tw-root.tw-root a {
-  @apply mx-1 inline-block grow px-2 py-1;
-  @apply rounded-t border border-b-0 border-solid border-neutral-300;
-  @apply bg-neutral-100 hover:bg-neutral-200;
-}
-.tw-root.tw-root a.selected {
-  @apply relative -bottom-px border-b-0;
-  @apply bg-white;
-}
-</style>
 
 <script lang="ts">
 import { defineComponent } from "vue"
@@ -34,8 +29,8 @@ export default defineComponent({
   },
   emits: ["update:modelValue"],
   computed: {
-    classes(): string[] {
-      return this.tabs.map((t, ix) => (this.modelValue === ix ? "selected" : ""))
+    selected(): boolean[] {
+      return this.tabs.map((t, ix) => this.modelValue === ix)
     },
   },
 })

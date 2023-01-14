@@ -14,6 +14,7 @@ export interface NrNodeDef {
   paletteLabel?: string
   set?: any // which Node set it belongs to
   defaults: Record<string, any>
+  //vue_props_debug: Record<string, Record<string, any>> // injected by us, do not use in code
   oneditprepare?: (this: NrNodeRaw) => void
   oneditsave?: (this: NrNodeRaw) => boolean
   oneditcancel?: (this: NrNodeRaw) => void

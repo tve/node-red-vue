@@ -31,9 +31,9 @@ function NrFmtTip(tip: string | undefined, classes?: string) {
   // plain and monospace elements
   let tip_parts: any[] = tip.split("`")
   tip_parts = tip_parts.map((t, i) =>
-    i % 2 ? h("span", { class: "font-mono text-yellow-900" }, t) : t
+    i % 2 ? h("span", { class: "font:mono fg:yellow-20" }, t) : t
   )
-  return h("div", { class: "text-sm " + (classes || "") }, tip_parts)
+  return h("div", { class: "text:85% pt:4 nr-fmt-tip " + (classes || "") }, tip_parts)
 }
 export { NrFmtTip }
 
@@ -49,7 +49,7 @@ const NrInputTip = defineComponent({
   setup:
     (props, { slots }) =>
     () => {
-      return h("div", { class: "flex flex-col" }, [
+      return h("div", { class: "flex flex:col nr-input-tip" }, [
         slots.default && slots.default(),
         NrFmtTip(props.tip),
       ])
@@ -75,7 +75,7 @@ const NrStringInput = defineComponent({
         h("input", {
           type: "text",
           value: props.modelValue,
-          class: "px-2",
+          class: "nr-string-input px:1ex",
           onInput: withModifiers(
             (ev: InputEvent) => {
               const target = ev.target as HTMLInputElement
@@ -107,7 +107,7 @@ const NrNumberInput = defineComponent({
         h("input", {
           type: "number",
           value: props.modelValue,
-          class: "px-2 w-24",
+          class: "nr-number-input px:1ex w:10ex text:right",
           onInput: withModifiers(
             (ev: InputEvent) => {
               const target = ev.target as HTMLInputElement
@@ -142,7 +142,7 @@ const NrCheckboxInput = defineComponent({
         h("input", {
           type: "Checkbox",
           checked: !!props.modelValue,
-          class: "mt-2",
+          class: "nr-checkbox-input mt:1.5ex mb:auto",
           onInput: withModifiers(
             (ev: InputEvent) => {
               const target = ev.target as HTMLInputElement
@@ -152,7 +152,7 @@ const NrCheckboxInput = defineComponent({
           ),
           ...props,
         }),
-        NrFmtTip(props.tip, "mt-2 ml-4"),
+        NrFmtTip(props.tip, "mt:1ex ml:2ex"),
       ])
     },
 })
@@ -166,9 +166,14 @@ const NrPropsGrid = defineComponent({
   setup:
     (props, { slots }) =>
     () => {
-      return h("div", { class: "mt-4 grid grid-cols-[100px,1fr] content-center gap-x-3 gap-y-3" }, [
-        slots.default && slots.default(),
-      ])
+      return h(
+        "div",
+        {
+          class:
+            "nr-props-grid mt:2ex grid grid-template-columns:100px|1fr content-center gap-x:3ex gap-y:3ex",
+        },
+        [slots.default && slots.default()]
+      )
     },
 })
 export { NrPropsGrid }
@@ -184,8 +189,8 @@ const NrLabel = defineComponent({
   setup:
     (props, { slots }) =>
     () => {
-      return h("div", { class: "flex flex-row mt-2" }, [
-        props.icon && h("i", { class: "fa mr-1 " + props.icon }),
+      return h("div", { class: "nr-label flex flex:row pt:8px" }, [
+        props.icon && h("i", { class: "fa mr:0.5ex " + props.icon }),
         slots.default && slots.default(),
       ])
     },

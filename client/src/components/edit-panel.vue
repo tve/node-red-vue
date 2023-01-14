@@ -1,5 +1,6 @@
 <template>
-  <component :is="component" v-bind="props" @update:prop="onUpdateProp" />
+  <component :is="component" v-bind="{ ...props, ...$attrs }" @update:prop="onUpdateProp" />
+  <div class="abs right:-2ex top:-2ex fg:grass-90 f:70%">V</div>
 </template>
 
 <script lang="ts">
@@ -9,11 +10,13 @@ import type { NrNode } from "/src/node-red"
 export default defineComponent({
   name: "EditPanel",
   props: {
-    node: { type: Object as PropType<NrNode>, required: true },
-    component: { type: String, required: true },
+    node: { type: Object as PropType<NrNode>, required: true }, // node to edit
+    component: { type: String, required: true }, // name of component for the edit pane
+    // "props" object of the component, so we can figure out the intended types of the props
+    propDefs: { type: Object as PropType<Record<string, any>>, required: false },
   },
   provide() {
-    return { node: this.node }
+    return { node: { ...this.node, props: this.props } }
   },
   data() {
     return {
@@ -24,6 +27,7 @@ export default defineComponent({
   created() {
     const defaults = this.node._def.defaults
     const propNames = Object.keys(defaults)
+    const conversions = []
     for (const propName of propNames) {
       // handle props that refer to config nodes specially
       if (defaults[propName].type) {
@@ -33,9 +37,21 @@ export default defineComponent({
           this.observe(propName)
         }
       }
-      // initial value
-      this.props[propName] = this.node[propName]
+      // initial value: convert strings to correct types 'cause NR typ has everything as strings
+      const tgtType = this.propDefs?.[propName]?.type
+      if (
+        typeof this.node[propName] === "string" &&
+        tgtType &&
+        typeof tgtType === "function" &&
+        tgtType.name != String
+      ) {
+        conversions.push(`${propName} to ${tgtType.name}`)
+        this.props[propName] = tgtType(this.node[propName])
+      } else {
+        this.props[propName] = this.node[propName]
+      }
     }
+    if (conversions.length > 0) console.log(`Converted ${conversions.join(", ")}`)
   },
   unmounted() {
     for (const observer of this.observers) observer.disconnect()
@@ -69,6 +85,7 @@ export default defineComponent({
 
     onUpdateProp(propName: string, val: any): void {
       this.node.setEdited(propName, val)
+      this.props[propName] = val
     },
   },
 })
