@@ -42,9 +42,14 @@ module.exports = function (nodeType, scriptAst, source) {
         if (s.value?.type === "StringLiteral") {
           help = s.value.value
         } else if (s.value?.type === "TemplateLiteral") {
-          help = s.value.quasis.map(q => q.value.raw).join("") // hope this is right...
+          // s.value.quasis holds the content of the original `...` strings. To get that
+          // content back with the right \ processing we need to surround each quasi with
+          // backticks and eval them.
+          //console.log(s.value.quasis)
+          const tmpl = s.value.quasis.map(q => "`" + q.value.raw + "`").join(" + ")
+          help = new Function("return " + tmpl)()
         }
-        //console.log("===== help =====\n" + help, "\n===== END help =====")
+        // console.log("===== help =====\n" + help, "\n===== END help =====")
       }
     }
     if (!props) return { tmpl: "", error: "default export is missing 'props' property" }
