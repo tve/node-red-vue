@@ -24,7 +24,7 @@ export default defineConfig({
     assetsDir: "client",
     cssCodeSplit: false,
     manifest: true,
-    emptyOutDir: false,
-    rollupOptions: { external: ["resources/node-red-vue/ems-config.js"] },
+    emptyOutDir: true,
+    //: { external: ["resources/node-red-vue/ems-config.js"] },
   },
 })

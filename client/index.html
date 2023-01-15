@@ -1,2 +1,7 @@
-<script type="module" src="resources/node-red-vue/ems-config.js"></script>
+<html>
+  <head>
+    <!-- using html head so the ems-config import doesn't get reorderd to the end -->
+    <script type="module" src="/client/ems-config.js"></script>
+  </head>
+</html>
 <script type="module" crossorigin src="/src/node-red-vue.ts"></script>
