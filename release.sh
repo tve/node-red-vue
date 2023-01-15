@@ -44,7 +44,7 @@ sed -e 's;"/client;"resources/node-red-vue/client;' \
     resources/index.html >node-red-vue.html
 
 echo "Releasing Node-RED-Vue"
-npm version patch
+v=`npm version patch`
 git push
 npm publish --tag dev
 mv node-red-vue.html node-red-vue-dist.html
