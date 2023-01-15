@@ -28,7 +28,6 @@ mapImport({ vue: "Vue" })
 enum TemplateState {
   failed, // fetch failed, should be retried
   fetching, // fetching, don't mess with it
-  waiting, // fetched, waiting for node-type-added event
   done, // type done, template created
   dead, // fatal error while generating component or template
 }
@@ -53,14 +52,11 @@ RED.comms.subscribe("vue-add-type", (topic, object) => {
     const { ix, name } = object
     if (name && typeof name == "string" && Number.isFinite(ix) && ix >= 0) {
       // check whether it's OK to fetch this template
-      const err = checkTemplate(ix, name)
-      if (err) {
-        console.log(err)
-        return
-      }
+      if (templates[ix]?.state == TemplateState.fetching) return
       // fetch the template and any we may have missed
       let start = ix
-      while (start > 0 && checkTemplate(start - 1, null) == null) start--
+      if (start > templates.length) start = templates.length
+      while (start > 0 && templates[start - 1].state == TemplateState.failed) start--
       fetchTemplates(start, ix).then(() => {}) // launch async
       return
     }
@@ -119,40 +115,16 @@ async function fetchTemplates(start_ix: number, end_ix: number): Promise<void> {
   })
 }
 
-// check whether to fetch a template, return error string if not, or null to fetch
-function checkTemplate(ix: number, name: string | null) {
-  if (name) {
-    const old_ix = templates.findIndex(t => t.name == name)
-    if (old_ix >= 0 && old_ix != ix) {
-      return `node-red-vue: vue template index mismatch: ${name} ${old_ix} ${ix}`
-    }
-  }
-  switch (templates[ix]?.state) {
-    case TemplateState.failed:
-      return `node-red-vue: vue template fetch failed: ${name}`
-    case TemplateState.fetching:
-      return `node-red-vue: vue template already fetching: ${name}`
-    case TemplateState.waiting:
-      return `node-red-vue: vue template awaiting registration: ${name}`
-    case TemplateState.done:
-      return `node-red-vue: vue template already installed: ${name}`
-    case TemplateState.dead:
-      return `node-red-vue: vue template failed to install: ${name}`
-    default:
-      return null
-  }
-}
-
 export async function processTemplate(ix: number, data: Record<string, any>) {
   var name = "unknown"
   try {
-    // sanity checks
+    // sanity checks              TODO: perform a duplicate check, checking all components
     if (!data || typeof data != "object" || !["ix", "name", "url"].every(f => f in data))
       throw new Error(`invalid data: ${JSON.stringify(data)}`)
     name = data.name
     // async import of component module and sanity checks
     const loc = document.location
-    const modUrl = loc.origin + loc.pathname + data.url
+    const modUrl = loc.origin + loc.pathname + data.url + "?hash=" + data.hash
     const mod = await global.importShim(modUrl)
     const component = mod.default // Vue SFCs are expected to export default
     if (!component || typeof component != "object") throw new Error("invalid component")
@@ -161,11 +133,12 @@ export async function processTemplate(ix: number, data: Record<string, any>) {
       // template component need a name tweak
       const cn = makeComponentName(name)
       addComponent("edit-" + cn, component)
-      console.log(`Added Vue template component edit-${cn} from ${modUrl}`)
+      console.log(`Vue template component edit-${cn} (${data.hash}) from ${modUrl}`)
     } else {
       addComponent(name, component)
-      console.log(`Added Vue component ${name} from ${modUrl}`)
+      console.log(`Vue component ${name} (${data.hash}) from ${modUrl}`)
     }
+    templates[ix].state = TemplateState.done
   } catch (err) {
     console.error(`node-red-vue: failed to load vue template for ${name}:`, err)
     templates[ix].state = TemplateState.dead
