@@ -27,8 +27,8 @@ import { defineComponent } from "vue"
 export default defineComponent({
   name: "NrButtonbarInput",
   props: {
-    modelValue: { type: String, default: "" },
-    options: { type: Array, required: true },
+    modelValue: { type: [String, Number], default: "" },
+    options: { type: Array, required: true }, // array of values or [value,label] pairs
     tip: { type: String, required: false },
   },
   emits: ["update:modelValue"],
