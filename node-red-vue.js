@@ -79,8 +79,7 @@ module.exports = function (RED) {
             return `line ${err.loc.start.line} col ${err.loc.start.column}: ${err.message}`
           else return `${err.message}`
         })
-        RED.log.error(`Error compiling ${filename}:\n` + errs.join("\n"))
-        return
+        throw new Error(errs.join("\n"))
       }
 
       // add to registry
@@ -130,7 +129,11 @@ module.exports = function (RED) {
       }
       if (!node_fullInfo.config) node_fullInfo.config = config
       if (!node_fullInfo.help) node_fullInfo.help = {}
-      if (!node_fullInfo.help.en_US) node_fullInfo.help.en_US = help
+      if (!node_fullInfo.help["en-US"]) node_fullInfo.help["en-US"] = help
+
+      // console.log(node_fullInfo)
+      // const fi = RED_registry.getFullNodeInfo("@flexdash/node-red-flexdash/flexdash tab")
+      // console.log(fi)
     }
 
     async function _createVueTemplate(nodeType, filename, filePromise) {
@@ -169,8 +172,7 @@ module.exports = function (RED) {
         _createVueTemplate(nodeType, vueFile, fsp.readFile(vueFile, "utf8"))
       }
 
-      fs.watch(vueFile, { persistent: false }, fileChanged)
-      fileChanged(vueFile)
+      debouncedWatch(vueFile, fileChanged)
 
       locateComponents(vueFile)
     }
@@ -199,10 +201,23 @@ module.exports = function (RED) {
         const name = file.replace(/\.vue$/, "")
         if (components[name]) continue // already loaded
         const vueFile = path.join(componentsDir, file)
-        fs.watch(vueFile, { persistent: false }, () => fileChanged(name, vueFile))
-        fileChanged(name, vueFile)
+        debouncedWatch(vueFile, () => fileChanged(name, vueFile))
       }
       // TODO: watch for new files
+    }
+
+    // debounced fs.watch (we don't really look at the cause of the callback, not worth figuring
+    // out the operating system differences)
+    function debouncedWatch(filename, callback) {
+      callback(filename)
+      let timer = null
+      fs.watch(filename, { persistent: false }, () => {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+          timer = null
+          callback(filename)
+        }, 200)
+      })
     }
 
     // ===== Node-RED plugin registration
