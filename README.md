@@ -35,6 +35,22 @@ In order to write a Node-RED node using Vue:
 - Place help text for the help panel in the flow editor side-panel into a `help` field in the Vue
   options object and write the help using markdown syntax.
 
+### Component life-cycle
+
+- The component for a node is created and mounted when the node is edited, i.e., when the
+  edit pane is to be shown. This happens within the Node-RED oneditprepare callback.
+- The node properties are passed into the component's props.
+- As the user changes values, the component should emit `update:prop` events with the prop
+  name and new value. These values are saved in a temporary object and also fed back into the
+  component's props.
+- If the user clicks the Done button, the component is destroyed and the temporary object
+  values saved to the component properties.
+- If the user clicks the Cancel button, the component is destroyed and the temporary object is
+  discarded.
+- A simple event bus `$bus` is provided to the component for additional events, currently
+  `OnSave` and `OnCancel` events are generated to allow edited values to be saved or discarded
+  "last-minute" (this is used by the code editor component, for example).
+
 ## Benefits
 
 - Live in 2023, not 2015...
@@ -59,7 +75,9 @@ In order to write a Node-RED node using Vue:
 - loading CSS is not implemented (but it's easy to do), I'm using Master.CSS and haven't needed
   it yet...
 
-## Repo layout
+## Internals
+
+### Repo layout
 
 There are two applications in this repository: the Node-RED runtime plugin running on the
 server and the flow editor plugin running in the browser.
@@ -71,7 +89,7 @@ off the loading of the real client, which is a TypeScript+Vue application.
 The Vue app has its own node_modules, which are used to load dev tools as well as build a
 packaged vue application.
 
-## Internals
+### External libraries used
 
 This plugin leverages primarily 4 libraries:
 
@@ -85,6 +103,8 @@ This plugin leverages primarily 4 libraries:
   sheets. It's similar to TailwindCSS but takes it to the next level and weighs in at a fraction
   of the size and implementation complexity.
 
+### Overal functioning
+
 The starting point for a node that uses a Vue template is:
 
 - the traditional node `.js` file that gets loaded into the run-time
@@ -95,18 +115,21 @@ When Node-RED starts up:
 
 - it loads the node-red-vue plugin, which initialises things
 - it loads the `.js` file and that calls createVueTemplate in the node-red-vue plugin
-- the plugin looks for the `.vue` file and compiles it into a javascript module, plus
+- the plugin looks for the `.vue` file and compiles it into a javascript module, plus the
+  node descriptor that needs to be passed to `RED.nodes.registerType`, plus
   the HTML template with the `<input>` tags for all the properties of the node, plus the
   text for the help panel.
-- the plugin then inserts these three pieces into the Node-RED node registry so they get shipped
+- the plugin then inserts the node descriptor, the HTML template, and the help text into
+  the Node-RED node registry so they get shipped
   to the flow editor as if they had come from a traditional `.html` file
+- the javascript module is saved separately and is sent to the flow editor via a different route
 
 When the flow editor starts up:
 
-- the compiled javascript module gets executed, which causes the node type to be registered
-  with a descriptor (node name, category, number of inputs, etc.) that was auto-generated
+- the javascript surrounding the node descriptor gets executed, which causes the node type to
+  be registered with the descriptor (node name, category, number of inputs, etc.) generated
   from the Vue component definition
-- the descriptor also contains a generated oneditprepare function that calls into the plugin
+- the descriptor's oneditprepare function links into the plugin
   to load the Vue component and render it in the edit pane
 
 In the flow editor, when a user clicks on a node to edit it:
