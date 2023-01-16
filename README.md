@@ -37,23 +37,27 @@ In order to write a Node-RED node using Vue:
 
 ## Benefits
 
-- Clean abstraction of pieces using components instead of doing JQuery DOM manipulation
+- Live in 2023, not 2015...
+- Clean abstraction of functionality using components instead of doing JQuery DOM manipulation
   all over the place.
 - Hot-module reload while developing: no more restarting Node-RED and reloading the browser to
-  see changes.
-- Use components for the individual properties that encapsulate all the low-level details.
+  see changes, they show up instantaneously
+- Use components for the individual properties and have all the low-level details neatly encapsulated.
   No more:
   - conversion from string to the real type of the node property
   - fiddling with initialization of typedInput in oneditprepare
   - mistakes matching the various HTML element IDs to the property names
-  - saving of text editor in oneditsave
+  - saving of text editor content in oneditsave
 - Use TailWindCSS to style components, not more low-level CSS wrangling (unless you want to).
 - For advanced programmers: write the Vue component using typescript to reduce errors
 
 ## Missing features
 
-- validation on inputs (this needs to unify input field validation and node validation)
+- validation of inputs (this needs to unify input field validation and node validation to avoid the
+  the current total disconnect between property validation and typedInput validation)
 - support for less-common input types, such as env and credentials.
+- loading CSS is not implemented (but it's easy to do), I'm using Master.CSS and haven't needed
+  it yet...
 
 ## Repo layout
 
@@ -66,3 +70,70 @@ off the loading of the real client, which is a TypeScript+Vue application.
 
 The Vue app has its own node_modules, which are used to load dev tools as well as build a
 packaged vue application.
+
+## Internals
+
+This plugin leverages primarily 4 libraries:
+
+- The Vue run-time is loaded into the flow editor, it drives the reactive rendering and manages
+  the components
+- The Vue compiler is used to compile the `.vue` files into javascript, this happens in the
+  Node-RED run-time at start-up
+- ES-module-shims is a library that facilitates dynamic loading of modules and is extensively
+  used to load the Vue components, the Vue run-time, and any other dependencies into the flow editor
+- Master.CSS is used to make it easier to style HTML elements without using traditional style
+  sheets. It's similar to TailwindCSS but takes it to the next level and weighs in at a fraction
+  of the size and implementation complexity.
+
+The starting point for a node that uses a Vue template is:
+
+- the traditional node `.js` file that gets loaded into the run-time
+- a `.vue` "template" file that replaces the traditional node `.html` file
+- optionally some components in a `components` subdir
+
+When Node-RED starts up:
+
+- it loads the node-red-vue plugin, which initialises things
+- it loads the `.js` file and that calls createVueTemplate in the node-red-vue plugin
+- the plugin looks for the `.vue` file and compiles it into a javascript module, plus
+  the HTML template with the `<input>` tags for all the properties of the node, plus the
+  text for the help panel.
+- the plugin then inserts these three pieces into the Node-RED node registry so they get shipped
+  to the flow editor as if they had come from a traditional `.html` file
+
+When the flow editor starts up:
+
+- the compiled javascript module gets executed, which causes the node type to be registered
+  with a descriptor (node name, category, number of inputs, etc.) that was auto-generated
+  from the Vue component definition
+- the descriptor also contains a generated oneditprepare function that calls into the plugin
+  to load the Vue component and render it in the edit pane
+
+In the flow editor, when a user clicks on a node to edit it:
+
+- the flow editor calls oneditprepare, which calls into the node-red-vue plugin
+- a Vue "app" is created and mounted in the edit pane, it is fed the current value of the
+  node properties as (properly typed) props
+- when a property value is edited by the user, the Vue component must emit an event (that's a
+  Vue event that propagates up the hierarchy) with the new value
+- this event is processed by the plugin and the new value is saved in a temporary object
+- when the user clicks "Done", the plugin is invoked via oneditsave and saves the temporary
+  object into the node properties
+- if the user clicks "Cancel", the plugin is invoked via oneditcancel and the temporary
+  object is discarded
+- in either of the two exit cases the Vue app is unmounted and deleted
+- if, during the editing of the node, the user chooses to create or edit a config node then
+  the Vue app is hidden but remains alive so internal state is preserved
+- if the config node also uses Vue then the same process is followed and more than one Vue app
+  ends up being active at a time
+
+If the user edits the `.vue` file:
+
+- the plugin detects the change and recompiles the `.vue` file, it then sends a notification
+  to any connected flow editors, which load the new version of the component
+- the new version is currently just loaded and the user has to close the edit pane and re-open
+  it to see the changes (further improvement planned...)
+- the node type definition (e.g. the list of properties) cannot be changed this way, this is a
+  limitation of the flow editor.)
+- additional components used by the main Vue component are loaded into the flow editor using the
+  same mechanism (they are sent in bulk at start-up and they can similarly be dynamically updated)
