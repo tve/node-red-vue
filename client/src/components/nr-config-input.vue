@@ -2,27 +2,29 @@
 -->
 
 <template>
-  <div class="flex w:full">
-    <select class="flex:1 border:1|solid|gray-78 px:1ex w:0 flex:1" @input.prevent="onInput">
-      <option value="">--</option>
-      <option
-        v-for="config in configNodes"
-        :key="config.id"
-        :value="config.id"
-        :selected="config.id == selected">
-        <slot :nodeName="config.name" :node="config" />
-      </option>
-    </select>
-    <button
-      class="ml:2ex mr:1ex w:5ex r:4 border:1|solid|gray-78"
-      :disabled="!configSelected"
-      @click="onEdit">
-      <i class="fa fa-pencil" />
-    </button>
-    <button class="w:5ex r:4 border:1|solid|gray-78" @click="onAdd">
-      <i class="fa fa-plus" />
-    </button>
-  </div>
+  <nr-input-tip :tip="tip">
+    <div class="flex w:full">
+      <select class="flex:1 border:1|solid|gray-78 px:1ex w:0 flex:1" @input.prevent="onInput">
+        <option value="">--</option>
+        <option
+          v-for="config in configNodes"
+          :key="config.id"
+          :value="config.id"
+          :selected="config.id == selected">
+          <slot :nodeName="config.name" :node="config" />
+        </option>
+      </select>
+      <button
+        class="ml:2ex mr:1ex w:5ex r:4 border:1|solid|gray-78"
+        :disabled="!configSelected"
+        @click="onEdit">
+        <i class="fa fa-pencil" />
+      </button>
+      <button class="w:5ex r:4 border:1|solid|gray-78" @click="onAdd">
+        <i class="fa fa-plus" />
+      </button>
+    </div>
+  </nr-input-tip>
 </template>
 
 <script lang="ts">

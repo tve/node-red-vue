@@ -15,7 +15,9 @@ export const css = new MasterCSS({ config })
 
 const global = globalThis as any
 
-import * as vue_all from "vue"
+// Import all of Vue (run-time) and make it available as module "vue" via es-import-shims.
+// This allows components to import Vue as "import Vue from 'vue'" and have it work.
+import * as vue_all from "vue" // the "vue" here gets transformed into oblivion by the bundling
 global.Vue = vue_all
 mapImport({ vue: "Vue" })
 
@@ -146,6 +148,9 @@ export async function processTemplate(ix: number, data: Record<string, any>) {
 }
 global.vueProcessTemplate = processTemplate
 
+// The node template registration with the flow editor has no code but has an oneditprepare
+// link to this function here, which kicks-off the process of creating the Vue app and mounting
+// it in the DOM.
 function oneditprepare(this: NrNodeRaw) {
   // Mount the Vue app on the root element of the edit form
   const node = asNrNode(this)
@@ -161,7 +166,7 @@ function oneditprepare(this: NrNodeRaw) {
   // oneditsave needs to save the edited
   const nodeDef = node._def
   nodeDef.oneditsave = function () {
-    $bus.emit("onSave")
+    $bus.emit("save")
     unmount()
     node.saveEdited()
     cleanNrNode(node)
@@ -172,7 +177,7 @@ function oneditprepare(this: NrNodeRaw) {
   }
   // oneditcancel just calls unmount
   nodeDef.oneditcancel = function () {
-    $bus.emit("onCancel")
+    $bus.emit("cancel")
     unmount()
     cleanNrNode(node)
   }

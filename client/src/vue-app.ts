@@ -87,39 +87,8 @@ export function mountEditApp(nr_obj: NrNodeRaw, el: HTMLElement) {
 
   // create and mount the Vue app
   const { app, $bus } = createVueApp(EditPanel, rootProps)
+  app.provide("$bus", $bus)
   app.mount(el)
+  console.log("Providing $bus:", $bus)
   return { $bus, unmount: app.unmount }
-
-  // unmounting the vue app when it's parent element gets unmounted is not a good idea because
-  // when the flow editor switches between editing a node and a config node it unmounts one
-  // without deleting the DOM elements, and then mounts the other. It later swaps back by remounting
-  // the previously unmounted elements. (Why doesn't it just hide them???)
-
-  // const redEditorMainId = "red-ui-main-container"
-  // const redEditorMain = document.getElementById(redEditorMainId)
-  // if (redEditorMain) {
-  //   // register a MutationObserver so we can unmount the vue app when the el gets removed
-  //   // https://stackoverflow.com/a/45763238/3807231
-  //   // first construct list of parents up to redEditorMainId
-  //   const parents: Node[] = []
-  //   for (let p = el.parentNode; p && !p.isSameNode(redEditorMain); p = p.parentNode) parents.push(p)
-  //   // register observer on redEditorMain and watch for removal of any of the parents
-  //   const observer = new MutationObserver(mutations => {
-  //     mutations.forEach(mutation => {
-  //       if (mutation.type !== "childList") return
-  //       const r = parents.find(p => Array.from(mutation.removedNodes).some(r => r.isSameNode(p)))
-  //       if (r) {
-  //         console.log(`Unmounting vue app ${component} for ${nr_obj.id}`)
-  //         app.unmount()
-  //         observer.disconnect()
-  //       }
-  //     })
-  //   })
-  //   observer.observe(redEditorMain, { childList: true, subtree: true })
-
-  //   return { $bus, unmount: () => {} }
-  // } else {
-  //   console.error(`Vue shim: Could not find RED editor element #${redEditorMainId}`)
-  //   return { $bus, unmount: () => setTimeout(app.unmount, 300) }
-  // }
 }

@@ -43,7 +43,7 @@ export default defineComponent({
         typeof this.node[propName] === "string" &&
         tgtType &&
         typeof tgtType === "function" &&
-        tgtType.name != String
+        tgtType.name != "String"
       ) {
         conversions.push(`${propName} to ${tgtType.name}`)
         this.props[propName] = tgtType(this.node[propName])

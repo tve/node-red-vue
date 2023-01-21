@@ -10,8 +10,8 @@
 // Declare the types of events we broadcast using mitt
 import { Emitter } from "mitt"
 type BusEvents = {
-  onSave: void
-  onCancel: void
+  save: void
+  cancel: void
 }
 declare module "vue" {
   // declare global properties (injected when app is created)

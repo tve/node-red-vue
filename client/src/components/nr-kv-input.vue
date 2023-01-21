@@ -77,13 +77,6 @@ export default defineComponent({
     } catch (err) {
       console.error(`Failed to parse JSON value for prop '${val}':`, val)
     }
-
-    // register onSave so we can save the data to the node props
-    // this.$bus.on("onSave", () => {
-    //   const kv = Object.fromEntries(this.rows)
-    //   console.log("onSave", kv)
-    //   ;(this.node as Record<string, any>)[this.propName] = kv
-    // })
   },
   methods: {
     onUpdateValue(ix: number, ev: Event): void {
