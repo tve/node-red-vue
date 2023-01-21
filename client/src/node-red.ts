@@ -62,7 +62,7 @@ export function asNrNode(rawNode: NrNodeRaw): NrNode {
   node.prop = propName => (node as Record<string, any>)[propName]
   // get the current value of a prop, either edited or saved
   node.editedProp = propName =>
-    node._edited && propName in node._edited ? node._edited[propName] : node.prop(propName)
+    propName in node._edited ? node._edited[propName] : node.prop(propName)
   // accumulate an editing change to a prop
   node.setEdited = (propName, value) => (node._edited[propName] = value)
   // is this a config node?
@@ -72,8 +72,10 @@ export function asNrNode(rawNode: NrNodeRaw): NrNode {
 
   // save the edited props and mark the node as changed if values have changed
   node.saveEdited = () => {
-    if (node._edited) {
-      const changed = Object.keys(node._edited).some(p => node._edited![p] !== node.prop(p))
+    const editedKeys = Object.keys(node._edited)
+    if (editedKeys.length > 0) {
+      const changed = editedKeys.some(p => node._edited![p] !== node.prop(p))
+      console.log("Saving", node._edited)
       Object.assign(node, node._edited)
       node._edited = reactive({})
       if (changed) {

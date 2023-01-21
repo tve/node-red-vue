@@ -190,7 +190,7 @@ module.exports = function (RED) {
       const files = await fsp.readdir(componentsDir)
 
       function fileChanged(name, filename) {
-        RED.log.info("Creating Vue component '" + name + "' from " + filename)
+        RED.log.info("Vue '" + name + "' from " + filename)
         createVueComponent(name, filename, fsp.readFile(filename, "utf8"))
           .then(() => {})
           .catch(err => RED.log.error("Error loading Vue template: " + err.stack))
