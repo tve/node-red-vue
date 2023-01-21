@@ -1,3 +1,7 @@
+<!-- Component embedding a monaco editor, useful for code panels among others.
+     Copyright ©2023 by Thorsten von Eicken, see LICENSE
+-->
+
 <template>
   <div
     :class="[
@@ -14,12 +18,13 @@ import { RED } from "/src/node-red"
 export default defineComponent({
   name: "NrCodeEditor",
   props: {
-    modelValue: { type: String, required: false },
+    modelValue: { type: String, required: false }, // text to be edited
   },
   emits: ["update:modelValue"],
-  data() {
+  inject: ["$bus"],
+  setup() {
     return {
-      sfc_editor: null as any,
+      sfc_editor: null as any, // must be non-reactive or sfc_editor.destroy hangs
     }
   },
   computed: {
@@ -35,9 +40,14 @@ export default defineComponent({
       value: this.modelValue || "",
       minimap: { enabled: false },
     })
+    this.$bus.on("save", () => {
+      this.$emit("update:modelValue", this.sfc_editor.getValue())
+    })
   },
-  unmounted() {
+  beforeUnmount() {
     // clean-up source code editor
+    this.sfc_editor.destroy()
+    // skip removing $bus handler: PITA & the bus gets desroyed anyway
   },
 })
 </script>
