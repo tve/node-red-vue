@@ -1,6 +1,6 @@
 {
   "name": "node-red-vue",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Write Node-RED node templates using Vue.js",
   "keywords": [
     "vue",
