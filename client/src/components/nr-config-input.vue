@@ -118,6 +118,8 @@ export default defineComponent({
       if (!node || !this.configTypes.includes(node._def.type)) return
       this.configNodes.push(node)
       this.configNodes.sort((a, b) => a.name.localeCompare(b.name))
+      this.selected = node.id
+      console.log("Added config node", node.name)
     },
     onNodeChanged(node: NrNodeRaw) {
       if (!node || !this.configTypes.includes(node._def.type)) return
