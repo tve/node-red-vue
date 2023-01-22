@@ -8,4 +8,5 @@ resources/manifest.json
 
 client/src/edit-panels/
 node-red-vue.html
+node-red-vue-dist.html
 dependencies.md
