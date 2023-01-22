@@ -43,7 +43,7 @@ module.exports = function (sfc_source, filename) {
     })
     templateOptions.compilerOptions.bindingMetadata = scriptDescr.bindings
     //console.log('===== script:\n', scriptDescr)
-    script += scriptDescr.content.replace(/export\s*default/, "const component =")
+    script += scriptDescr.content.replace(/^\s*export\s\s*default\s/m, "const component =")
     scriptAst = scriptDescr.scriptAst
     scriptRaw = scriptDescr.content // what compileScript returned before we mangled it
   } else {

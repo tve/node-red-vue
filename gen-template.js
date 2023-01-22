@@ -21,7 +21,7 @@ module.exports = function (nodeType, scriptAst, source) {
     // locate the Options API properties, i.e., "the big {}"
     let props, node_red, help
     for (const s of optionProperties) {
-      // console.log("===== s =====\n", s, "\n===== END s =====")
+      //console.log("===== optionProperty =====\n", s, "\n===== END s =====")
       if (
         s.type === "ObjectProperty" &&
         s.key.type === "Identifier" &&
