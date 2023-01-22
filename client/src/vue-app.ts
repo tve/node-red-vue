@@ -88,7 +88,7 @@ export function mountEditApp(nr_obj: NrNodeRaw, el: HTMLElement) {
   // create and mount the Vue app
   const { app, $bus } = createVueApp(EditPanel, rootProps)
   app.provide("$bus", $bus)
-  app.mount(el)
   console.log("Providing $bus:", $bus)
+  app.mount(el)
   return { $bus, unmount: app.unmount }
 }
