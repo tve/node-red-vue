@@ -110,8 +110,10 @@ module.exports = function (RED) {
     function setNodeTypeConfig(nodeType, config, help) {
       // get access to @node-red/registry
       if (!RED_registry) {
-        const registry_key = Object.keys(require.cache).filter(k =>
-          k.includes("@node-red/registry/lib/registry")
+        const registry_key = Object.keys(require.cache).filter(
+          k =>
+            k.includes("@node-red/registry/lib/registry") ||
+            k.includes("@node-red\\registry\\lib\\registry")
         )[0]
         RED_registry = require.cache[registry_key].exports
       }
