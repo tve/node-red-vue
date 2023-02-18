@@ -23,6 +23,9 @@
       <button class="w:5ex r:4 border:1|solid|gray-78" @click="onAdd">
         <i class="fa fa-plus" />
       </button>
+      <!-- hidden elements for Node-RED to populate with any change -->
+      <button :id="niPrefix + '-edit-' + propName" class="hidden" />
+      <input :id="niPrefix + '-' + propName" class="hidden" type="text" ref="nrInput" />
     </div>
   </nr-input-tip>
 </template>
@@ -52,6 +55,10 @@ export default defineComponent({
     configSelected(): NrNodeRaw | undefined {
       return this.configNodes.find(n => n.id == this.selected)
     },
+    niPrefix(): string {
+      const node = this.node as NrNode
+      return node?.isConfig() ? "node-input-config" : "node-input"
+    },
   },
   watch: {
     modelValue: {
@@ -72,6 +79,8 @@ export default defineComponent({
     RED.events.on("nodes:add", this.onNodeAdded)
     RED.events.on("nodes:change", this.onNodeChanged)
     this.selected = this.modelValue
+    // get a callback when the flow editor changes the nrInput
+    this.observe(this.$refs.nrInput as any, this.onNRChange)
   },
   unmounted(): void {
     RED.events.off("nodes:add", this.onNodeAdded)
@@ -96,8 +105,7 @@ export default defineComponent({
         return
       }
       const node = this.node as NrNode
-      const prefix = node?.isConfig() ? "node-input-config" : "node-input"
-      RED.editor.editConfig(this.propName, configType, "_ADD_", prefix, node?._raw)
+      RED.editor.editConfig(this.propName, configType, "_ADD_", this.niPrefix, node?._raw)
     },
 
     // onEdit button, need to cause the flow editor to open the edit config node dialog
@@ -113,14 +121,35 @@ export default defineComponent({
       RED.editor.editConfig(this.propName, configType, this.selected, prefix, node?._raw)
     },
 
-    // onNodeAdded: a new config node was added to Node-RED, may need to update our select
+    // the input was changed by the flow-editor, this happens when the user adds a new config node
+    onNRChange(val: any): void {
+      this.$emit("update:modelValue", val)
+    },
+
+    // observe when an input element's value is assigned in javascript
+    // https://stackoverflow.com/a/48528450/3807231
+    observe(el: HTMLElement, callback: (value: any) => void): void {
+      var descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")
+
+      Object.defineProperty(el, "value", {
+        set: function (newVal: any) {
+          callback(newVal)
+          descriptor!.set!.apply(this, [newVal])
+        },
+        get: descriptor!.get,
+      })
+    },
+
+    // onNodeAdded: a new config node was added to Node-RED, may need to update our drop-down
+    // list of selectable config nodes
     onNodeAdded(node: NrNodeRaw) {
       if (!node || !this.configTypes.includes(node._def.type)) return
       this.configNodes.push(node)
       this.configNodes.sort((a, b) => a.name.localeCompare(b.name))
-      this.selected = node.id
-      console.log("Added config node", node.name)
     },
+
+    // onNodeChanged: a config node was changed, this may affect how we display the drow-down
+    // list, e.g., the name of a node may have changed
     onNodeChanged(node: NrNodeRaw) {
       if (!node || !this.configTypes.includes(node._def.type)) return
       const reactiveNode = this.configNodes.findIndex(n => n.id == node.id)

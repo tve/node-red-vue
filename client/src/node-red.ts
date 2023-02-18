@@ -73,20 +73,40 @@ export function asNrNode(rawNode: NrNodeRaw): NrNode {
   // save the edited props and mark the node as changed if values have changed
   node.saveEdited = () => {
     const editedKeys = Object.keys(node._edited)
-    if (editedKeys.length > 0) {
-      const changed = editedKeys.some(p => node._edited![p] !== node.prop(p))
-      console.log("Saving", node._edited)
+    const changed = editedKeys.some(p => node._edited![p] !== node.prop(p))
+    if (changed) {
+      // update the "users" field of any config nodes that have changed
+      for (const propName of editedKeys) {
+        if (!node._def.defaults[propName]?.type) continue // not a config node
+        const oldConfigId = node.prop(propName)
+        const newConfigId = node._edited[propName]
+        if (oldConfigId == newConfigId) continue // no change
+        const oldConfig = RED.nodes.node(oldConfigId)
+        if (oldConfig) {
+          // remove this node from the old config node
+          const ix = oldConfig.users.indexOf(node)
+          if (ix >= 0) {
+            oldConfig.users.splice(ix, 1)
+            RED.events.emit("nodes:change", oldConfig)
+          }
+        }
+        const newConfig = RED.nodes.node(newConfigId)
+        if (newConfig) {
+          // add this node to the new config node
+          newConfig.users.push(node)
+          RED.events.emit("nodes:change", newConfig)
+        }
+      }
+      // copy the new values into the node
+      //console.log("Old values:", Object.keys(node).join(","))
       Object.assign(node, node._edited)
       node._edited = reactive({})
-      if (changed) {
-        node.changed = true
-        RED.nodes.dirty(true) // has to be redrawn to get blue circle
-      }
-      // remove all node-red input elements so NR doesn't save over us
-      // FIXME? this assumes all props are edited in Vue, to be more flexible we could
-      // perhaps only delete the ones that we accessed by node.inputValue?
-      node.getPropNames().forEach(p => node.deleteInput(p))
+      node.changed = true
+      //console.log("New values:", Object.keys(node).join(","))
+      RED.nodes.dirty(true) // has to be redrawn to get blue circle
     }
+    // remove all node-red input elements so NR doesn't save over us
+    node.getPropNames().forEach(p => node.deleteInput(p))
   }
 
   node.inputId = (propName: string) => {
@@ -135,6 +155,7 @@ interface REDNodesRegistry {
 }
 // API provided by RED.nodes
 interface REDNodes {
+  node(id: string): NrNodeRaw
   eachConfig(cb: (node: NrNodeRaw) => void): void
   getType(type: string): NrNodeDef // same as registry.getNodeType
   registry: REDNodesRegistry
@@ -157,6 +178,7 @@ interface REDEditor {
 interface REDEvents {
   on(event: string, cb: (...args: any[]) => void): void
   off(event: string, cb: (...args: any[]) => void): void
+  emit(event: string, ...args: any[]): void
 }
 // API provided by RED.plugins
 interface REDPlugins {
