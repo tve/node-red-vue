@@ -63,7 +63,7 @@ RED.comms.subscribe("vue-add-type", (topic, object) => {
       return
     }
   }
-  console.log("node-red-vue: invalid vue-add-type message:", object)
+  console.log("Node-RED Vue: invalid vue-add-type message:", object)
 })
 
 // RED.events.on("nodes:add", (node: NrNodeRaw) => {
@@ -126,7 +126,8 @@ export async function processTemplate(ix: number, data: Record<string, any>) {
     name = data.name
     // async import of component module and sanity checks
     const loc = document.location
-    const modUrl = loc.origin + loc.pathname + data.url + "?hash=" + data.hash
+    const modUrlBase = (loc.origin + loc.pathname + data.url).replace(/ /g, "%20")
+    const modUrl = modUrlBase + "?hash=" + data.hash
     const mod = await global.importShim(modUrl)
     const component = mod.default // Vue SFCs are expected to export default
     if (!component || typeof component != "object") throw new Error("invalid component")
@@ -135,14 +136,14 @@ export async function processTemplate(ix: number, data: Record<string, any>) {
       // template component need a name tweak
       const cn = makeComponentName(name)
       addComponent("edit-" + cn, component)
-      console.log(`Vue template component edit-${cn} (${data.hash}) from ${modUrl}`)
+      console.log(`Vue template component edit-${cn} (${data.hash}) from ${modUrlBase}`)
     } else {
       addComponent(name, component)
-      console.log(`Vue component ${name} (${data.hash}) from ${modUrl}`)
+      console.log(`Vue component ${name} (${data.hash}) from ${modUrlBase}`)
     }
     templates[ix].state = TemplateState.done
   } catch (err) {
-    console.error(`node-red-vue: failed to load vue template for ${name}:`, err)
+    console.error(`Node-RED Vue: failed to load vue template for ${name}:`, err)
     templates[ix].state = TemplateState.dead
   }
 }
@@ -171,7 +172,7 @@ function oneditprepare(this: NrNodeRaw) {
     node.saveEdited()
     cleanNrNode(node)
     setTimeout(() => {
-      console.log("Saved node", node)
+      console.log("Node-RED Vue saved node", node)
     }, 500)
     return false
   }

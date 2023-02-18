@@ -57,7 +57,7 @@ export function createVueApp(
   app.config.globalProperties = {
     $bus,
   }
-  console.log("Available components:", Object.keys(components).join(","))
+  //console.log("Available components:", Object.keys(components).join(","))
   for (const c in components) {
     app.component(c, components[c])
   }
@@ -88,7 +88,6 @@ export function mountEditApp(nr_obj: NrNodeRaw, el: HTMLElement) {
   // create and mount the Vue app
   const { app, $bus } = createVueApp(EditPanel, rootProps)
   app.provide("$bus", $bus)
-  console.log("Providing $bus:", $bus)
   app.mount(el)
   return { $bus, unmount: app.unmount }
 }

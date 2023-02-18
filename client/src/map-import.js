@@ -35,5 +35,5 @@ export default function (/*ImportMap*/ import_map) {
     imap.imports[key] = blobUrl
   }
   importShim.addImportMap(imap)
-  console.log("Import map: ", JSON.stringify(importShim.getImportMap()?.imports))
+  //console.log("Import map: ", JSON.stringify(importShim.getImportMap()?.imports))
 }

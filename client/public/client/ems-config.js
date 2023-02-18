@@ -5,4 +5,3 @@ window.esmsInitOptions = {
   skip: "^https?:.*/assets/index.[a-z0-9]{8}.js$", // bundled Node-RED-Vue assets
   mapOverrides: true, // Permit overrides to import maps (used by custom widget HMR)
 }
-console.log("Es-module-shims config set")

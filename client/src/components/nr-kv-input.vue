@@ -65,7 +65,7 @@ export default defineComponent({
         if (val && val.trim().startsWith("{")) {
           const kv = JSON.parse(val)
           this.rows = Object.entries(kv)
-          console.log(`Converted KV from string "${val}""`)
+          //console.log(`Converted KV from string "${val}""`)
         } else {
           console.warn(`Invalid value for prop '${val}':`, val)
         }
@@ -80,24 +80,20 @@ export default defineComponent({
   },
   methods: {
     onUpdateValue(ix: number, ev: Event): void {
-      console.log("onUpdateValue", ix, EvalError)
       const target = ev.target as HTMLInputElement
       this.rows[ix][1] = target.value
       this.$emit("update:modelValue", Object.fromEntries(this.rows))
     },
     onUpdateKey(ix: number, ev: Event): void {
-      console.log("onUpdateKey", ix, ev)
       const target = ev.target as HTMLInputElement
       this.rows[ix][0] = target.value
       this.$emit("update:modelValue", Object.fromEntries(this.rows))
     },
     onDeleteRow(ix: number): void {
-      console.log("onDeleteRow", ix)
       this.rows.splice(ix, 1)
       this.$emit("update:modelValue", Object.fromEntries(this.rows))
     },
     onAddRow(): void {
-      console.log("onAddRow")
       this.rows.push(["", ""])
       this.$emit("update:modelValue", Object.fromEntries(this.rows))
     },
