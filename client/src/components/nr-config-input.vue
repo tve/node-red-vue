@@ -145,7 +145,7 @@ export default defineComponent({
     onNodeAdded(node: NrNodeRaw) {
       if (!node || !this.configTypes.includes(node._def.type)) return
       this.configNodes.push(node)
-      this.configNodes.sort((a, b) => a.name.localeCompare(b.name))
+      this.configNodes.sort((a, b) => (a.name || "").localeCompare(b.name))
     },
 
     // onNodeChanged: a config node was changed, this may affect how we display the drow-down
@@ -158,7 +158,7 @@ export default defineComponent({
         // traversing any reactivity proxy) we need to force Vue to notice the change.
         this.configNodes[reactiveNode] = null!
         this.configNodes[reactiveNode] = node
-        this.configNodes.sort((a, b) => a.name.localeCompare(b.name))
+        this.configNodes.sort((a, b) => (a.name || "").localeCompare(b.name))
       }
     },
   },
