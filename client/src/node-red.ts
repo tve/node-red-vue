@@ -47,6 +47,7 @@ export interface NrNode extends NrNodeRaw {
   deleteInput: (propName: string) => void // remove the editor pane input element for a prop
   isConfig(): boolean // true if this is a config node
   _raw: NrNodeRaw // get the raw node to pass back to Node-RED
+  _editState: Record<string, any> // state for oneditprepare, oneditsave, onedit... methods
 }
 
 // convert a play Node-RED Node to one for our purposes by adding some convenient methods

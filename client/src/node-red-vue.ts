@@ -1,7 +1,7 @@
 // Vue plugin for Node-RED - implement Node-RED flow-editor node templates using Vue & TailwindCSS
 // Copyright ©2022-2023 by Thorsten von Eicken, see LICENSE
 
-import { RED, NrNodeRaw, asNrNode, cleanNrNode } from "/src/node-red"
+import { RED, NrNodeRaw, NrNode, asNrNode, cleanNrNode } from "/src/node-red"
 import { addComponent, mountEditApp, makeComponentName } from "./vue-app"
 import "./base.css"
 import mapImport from "./map-import"
@@ -163,10 +163,17 @@ function oneditprepare(this: NrNodeRaw) {
   }
   attach.style.width = "500px" // initial and minimum width, see oneditresize below
   const { $bus, unmount } = mountEditApp(node, attach)
+  node._editState = { attach, $bus, unmount }
+}
+global.vueOnEditPrepare = oneditprepare
 
-  // oneditsave needs to save the edited
-  const nodeDef = node._def
-  nodeDef.oneditsave = function () {
+//const nodeDef = node._def
+// oneditsave needs to save the edited
+function oneditsave(this: NrNodeRaw) {
+  if (!("_editState" in this)) throw new Error("Node-RED-Vue oneditsave: no edit state")
+  const node = this as NrNode
+  try {
+    const { $bus, unmount } = node._editState
     $bus.emit("save")
     unmount()
     node.saveEdited()
@@ -175,16 +182,28 @@ function oneditprepare(this: NrNodeRaw) {
       console.log("Node-RED Vue saved node", node)
     }, 500)
     return false
-  }
-  // oneditcancel just calls unmount
-  nodeDef.oneditcancel = function () {
-    $bus.emit("cancel")
-    unmount()
-    cleanNrNode(node)
-  }
-
-  nodeDef.oneditresize = function (this: NrNodeRaw, size: { width: number; height: number }) {
-    attach.style.width = size.width + "px"
+  } catch (err) {
+    console.error(`oneditsave of ${this.id}`, (err as any).stack)
+    return false
   }
 }
-global.vueOnEditPrepare = oneditprepare
+global.vueOnEditSave = oneditsave
+
+// oneditcancel just calls unmount
+function oneditcancel(this: NrNodeRaw) {
+  if (!("_editState" in this)) throw new Error("Node-RED-Vue oneditcancel: no edit state")
+  const node = this as NrNode
+  const { $bus, unmount } = node._editState
+  $bus.emit("cancel")
+  unmount()
+  cleanNrNode(node)
+}
+global.vueOnEditCancel = oneditcancel
+
+function oneditresize(this: NrNodeRaw, size: { width: number; height: number }) {
+  if (!("_editState" in this)) throw new Error("Node-RED-Vue oneditcancel: no edit state")
+  const node = this as NrNode
+  const { attach } = node._editState
+  attach.style.width = size.width + "px"
+}
+global.vueOnEditResize = oneditresize

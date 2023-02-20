@@ -92,7 +92,11 @@ function generateRegistration(name, props, node_red) {
     `{
     defaults: ${JSON.stringify(defaults)},
     vue_props_debug: ${JSON.stringify(props)},
-    oneditprepare() { return window.vueOnEditPrepare.apply(this) },` + node_red.substring(1)
+    oneditprepare() { return window.vueOnEditPrepare.apply(this) },
+    oneditsave() { return window.vueOnEditSave.apply(this) },
+    oneditcancel() { return window.vueOnEditCancel.apply(this) },
+    oneditresize(size) { return window.vueOnEditResize.apply(this, [size]) },` +
+    node_red.substring(1)
   let script = `
 (function() {
   const typedef = ${node_red}
